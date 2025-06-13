@@ -137,7 +137,11 @@ if (isset($user->socid) && $user->socid > 0) {
 * Actions
 */
 
-// None
+if (GETPOST('start_date', 'alpha')){
+	$start_date = GETPOST('start_date', 'alpha');
+} else {
+	$start_date = '';
+}
 
 
 /*
@@ -149,7 +153,6 @@ $formfile = new FormFile($db);
 $object = new Societe($db);
 $product = new Product($db);
 $propal = new Propal($db);
-llxHeader("", $langs->trans("MercurialesClientArea"), '', '', 0, 0, '', '', '', 'mod-mercurialesclient page-index');
 
 // Variables to define the limits of the request and the number of rows printed
 $limit = GETPOSTINT('limit') ? GETPOSTINT('limit') : $conf->liste_limit;
@@ -169,20 +172,31 @@ if ($offset > $totalnumofrows) {	// if total resultset is smaller than the pagin
 
 
 $object->fetch($socid);
+// print date('Y-m-j', dol_now());
+
+llxHeader("", $object->name.' - '.$langs->trans("Mercuriale"), '', '', 0, 0, '', '', '', 'mod-mercurialesclient page-index');
 
 if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 	// SQL request
 	$sql = 'SELECT pd.fk_propal as propal_id, pd.fk_product as prod_id, pd.qty as qty, pd.subprice as price, pd.remise_percent as remise';
 	$sql.= ' FROM '.MAIN_DB_PREFIX.'propal as p';
 	$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'propaldet as pd on pd.fk_propal = p.rowid';
+	$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'product as prod on prod.rowid = pd.fk_product';
 	$sql.= ' WHERE p.fk_soc = '.$socid;
-	$sql.= ' AND p.date_valid = (SELECT MAX(pr.date_valid) FROM '.MAIN_DB_PREFIX.'propal as pr LEFT JOIN '.MAIN_DB_PREFIX.'propaldet as prd on prd.fk_propal = pr.rowid WHERE pr.fk_soc = 768 AND pd.fk_product = prd.fk_product)';
+	// Remove the product if not to buy and to sell
+	$sql.= ' AND prod.tosell = 1 AND prod.tobuy = 1';
+	// If start_date exists, we only get the products in proposals after this date
+	if ($start_date){
+		$sql.= " AND p.date_valid >= '".$start_date."'";
+	}
+	// Only get the product on the last proposal it appears
+	$sql.= ' AND p.date_valid = (SELECT MAX(pr.date_valid) FROM '.MAIN_DB_PREFIX.'propal as pr LEFT JOIN '.MAIN_DB_PREFIX.'propaldet as prd on prd.fk_propal = pr.rowid WHERE pr.fk_soc = '.$socid.' AND pd.fk_product = prd.fk_product)';
 
 	$resql = $db->query($sql);
 
 	
 	// Check if the button was clicked
-	if ($action == 'create_mercu'){
+	if ($action == 'create_mercu' && GETPOSTISSET('createBtn', 'bool')){
 		// Create proposal with all the products from previous proposals
 		$prop = new Propal($db, $socid);
 		$prop->date_creation = dol_now();
@@ -197,13 +211,18 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 		// Loop on each product to had them to the proposal
 		for($i = 0; $i < $num; $i++){
 			$obj = $db->fetch_object($resql);
-			// $product->fetch($obj->prod_id);
+			$product->fetch($obj->prod_id);
 			$resAdd = $prop->add_product($obj->prod_id, 1, $obj->remise);
-			// $resAdd = $prop->addline('', $obj->price, $obj->qty)
+			// $resAdd = $prop->addline('', $obj->price, 1, $product->tva_tx, $product->localtax1_tx, $product->localtax2_tx, $obj->prod_id, $obj->remise, 'HT', 0, 0, -1);
 			// print "Ajout réussi : ".$resAdd;
 		}
+		// print 'erreur : ';
+		// var_dump($prop->error);
+		// print '<br>erreurs : ';
+		// var_dump($prop->errors);
 		$resCreation = $prop->create($user);
-		print 'ID propale : '.$prop->id.' et sa ref '.$prop->ref;
+		
+		// print 'ID propale : '.$prop->id.' et sa ref '.$prop->ref;
 		if ($resCreation >= 0){
 			$text = $langs->trans("MERCU_SUCCESS_CREATE").' <a href="'.DOL_URL_ROOT.'/comm/propal/card.php?id='.$prop->id.'">'.$prop->ref.'</a>';
 			setEventMessages($text, null, 'mesgs');
@@ -236,12 +255,24 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 	$num = $db->num_rows($resql);
 	
 	$imax = ($limit ? min($num, $limit) : $num);
-	print '<form method="POST" id="createPropal" action="'.$_SERVER["PHP_SELF"].'?socid='.$socid.'&action=create_mercu">';
+	// $button = '<form method="POST" id="createPropal" action="'.$_SERVER["PHP_SELF"].'?socid='.$socid.'&action=create_mercu">';
+	$button = '<input type="hidden" name="token" value="'.newToken().'">';
+	$button.= '<input type="submit" class="button buttonform small" name="createBtn" value="'.$langs->trans("MERCU_BUTTON_TEXT").'">';
+	$button.= '</form>';
+	print '<form method="POST" id="createPropal" action="'.$_SERVER["PHP_SELF"].'?socid='.$socid.'">';
 	print '<input type="hidden" name="token" value="'.newToken().'">';
-	$button = '<input type="submit" class="button buttonform small" value="'.$langs->trans("MERCU_BUTTON_TEXT").'">';
-	print_barre_liste($langs->trans("Products").' '.$button, $page, $_SERVER["PHP_SELF"], '', '', '', '', $num, $totalnumofrows, 'product', 0, '', '', $limit, 0, 0, 1);
+	print_barre_liste($langs->trans("Products"), $page, $_SERVER["PHP_SELF"], '', '', '', '', $num, $num, 'product', 0, '', '', $limit, 0, 0, 1);
 	print '</form>';
 
+	// Form for the date
+	print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'?socid='.$socid.'&action=create_mercu">';
+	print '<input type="hidden" name="token" value="'.newToken().'">';
+	print '<label for="starting_date">' . $langs->trans('START_DATE') . '</label>';
+	print '<input type="date" id="start_date" name="start_date" value="'.$start_date.'">';
+	print '<input type="submit" class="button buttonform small" value="'.$langs->trans("UPDATE").'">';
+	// print '</form>';
+
+	print $button;
 
 	print '<table class="noborder centpercent">';
 	print '<tr class="liste_titre">';

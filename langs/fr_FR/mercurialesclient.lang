@@ -18,7 +18,7 @@
 #
 
 # Module label 'ModuleMercurialesClientName'
-ModuleMercurialesClientName = Customer mercuriale
+ModuleMercurialesClientName = Mercuriale client
 # Module description 'ModuleMercurialesClientDesc'
 ModuleMercurialesClientDesc = MercurialesClient description
 
@@ -54,8 +54,8 @@ MyWidget = My widget
 MyWidgetDescription = My widget description
 
 
-MERCU_BUTTON_TEXT = Create mercuriale
-MERCU_SUCCESS_CREATE = Price list created
-MercurialesClient = Customer price list
-START_DATE = Max date to consider
-MERCU_CLIENT_READ_PERM = Access to generation of customer market price list
+MERCU_BUTTON_TEXT = Créer mercuriale
+MERCU_SUCCESS_CREATE = Mercuriale créée
+MercurialesClient = Mercuriale client
+START_DATE = Date maximale de prise en compte
+MERCU_CLIENT_READ_PERM = Accès à la génération de mercuriale client
