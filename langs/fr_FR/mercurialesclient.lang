@@ -56,6 +56,7 @@ MyWidgetDescription = My widget description
 
 MERCU_BUTTON_TEXT = Créer mercuriale
 MERCU_SUCCESS_CREATE = Mercuriale créée
-MercurialesClient = Mercuriale client
+MercurialeClient = Mercuriale client
 START_DATE = Date maximale de prise en compte
 MERCU_CLIENT_READ_PERM = Accès à la génération de mercuriale client
+UPDATE = Mettre à jour

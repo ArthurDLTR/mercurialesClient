@@ -56,6 +56,7 @@ MyWidgetDescription = My widget description
 
 MERCU_BUTTON_TEXT = Create mercuriale
 MERCU_SUCCESS_CREATE = Price list created
-MercurialesClient = Customer price list
+MercurialeClient = Customer price list
 START_DATE = Max date to consider
 MERCU_CLIENT_READ_PERM = Access to generation of customer market price list
+UPDATE = Update

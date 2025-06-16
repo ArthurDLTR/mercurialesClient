@@ -2,7 +2,7 @@
 
 ## Features
 
-Description of the module...
+Dolibarr external module to generate a customer price list based on the products in the previous proposals of a customer. 
 
 <!--
 ![Screenshot mercurialesclient](img/screenshot_mercurialesclient.png?raw=true "MercurialesClient"){imgmd}
