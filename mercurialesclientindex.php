@@ -143,6 +143,12 @@ if (GETPOST('start_date', 'alpha')){
 	$start_date = '';
 }
 
+if(GETPOST('customer_ref', 'alpha')){
+	$customer_ref = GETPOST('customer_ref', 'alpha');
+} else {
+	$customer_ref = '';
+}
+
 
 /*
 * View
@@ -188,6 +194,10 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 	// If start_date exists, we only get the products in proposals after this date
 	if ($start_date){
 		$sql.= " AND p.date_valid >= '".$start_date."'";
+	}
+	// If a customer ref is entered, we only get the proposals with this customer ref
+	if ($customer_ref){
+		$sql.= " AND p.ref_client LIKE '%".$customer_ref."%'";
 	}
 	// Only get the product on the last proposal it appears
 	$sql.= ' AND p.date_valid = (SELECT MAX(pr.date_valid) FROM '.MAIN_DB_PREFIX.'propal as pr LEFT JOIN '.MAIN_DB_PREFIX.'propaldet as prd on prd.fk_propal = pr.rowid WHERE pr.fk_soc = '.$socid.' AND pd.fk_product = prd.fk_product)';
@@ -256,8 +266,8 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 	
 	$imax = ($limit ? min($num, $limit) : $num);
 	// $button = '<form method="POST" id="createPropal" action="'.$_SERVER["PHP_SELF"].'?socid='.$socid.'&action=create_mercu">';
-	$button = '<input type="hidden" name="token" value="'.newToken().'">';
-	$button.= '<input type="submit" class="button buttonform" name="createBtn" value="'.$langs->trans("MERCU_BUTTON_TEXT").'">';
+	// $button = '<input type="hidden" name="token" value="'.newToken().'">';
+	$button = '<input type="submit" class="button buttonform" name="createBtn" value="'.$langs->trans("MERCU_BUTTON_TEXT").'">';
 	$button.= '</form>';
 	print '<form method="POST" id="createPropal" action="'.$_SERVER["PHP_SELF"].'?socid='.$socid.'">';
 	print '<input type="hidden" name="token" value="'.newToken().'">';
@@ -269,6 +279,11 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 	print '<input type="hidden" name="token" value="'.newToken().'">';
 	print '<label for="starting_date">' . $langs->trans('START_DATE') . '</label>';
 	print '<input type="date" id="start_date" name="start_date" value="'.$start_date.'">';
+	print '<br>';
+	
+	// Text box for search on Customer ref
+	print '<label for="customer_ref">'.$langs->trans('RefCustomer').'</label>';
+	print '<input type"text" id="customer_ref" name="customer_ref" value="'.$customer_ref.'">';
 	print '<input type="submit" class="button buttonform small" value="'.$langs->trans("UPDATE").'">';
 	print '<br>';
 
