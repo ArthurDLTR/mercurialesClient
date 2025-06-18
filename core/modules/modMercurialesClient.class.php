@@ -72,7 +72,7 @@ class modMercurialesClient extends DolibarrModules
 		$this->editor_url = '';
 
 		// Possible values for version are: 'development', 'experimental', 'dolibarr', 'dolibarr_deprecated', 'experimental_deprecated' or a version string like 'x.y.z'
-		$this->version = '0.2';
+		$this->version = '0.3';
 		// Url to the file with your last numberversion of this module
 		//$this->url_last_version = 'http://www.example.com/versionmodule.txt';
 
@@ -488,7 +488,7 @@ class modMercurialesClient extends DolibarrModules
 					}
 				}
 
-				$sql = array("INSERT INTO ".MAIN_DB_PREFIX."document_model (nom, type, entity) VALUES('huygens','propal','1')");
+				$sql = array("INSERT INTO ".MAIN_DB_PREFIX."document_model (nom, type, entity) VALUES('".$MODELNAME."','".$MODEL_TARGET_MODULE."','".$conf->entity."'");
 			}
 		}
 

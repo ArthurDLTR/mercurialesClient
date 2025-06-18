@@ -40,7 +40,7 @@ require_once DOL_DOCUMENT_ROOT.'/core/lib/pdf.lib.php';
 /**
  *	Class to generate PDF proposal Cyan
  */
-class pdf_huygens extends ModelePDFPropales
+class pdf_propale_huygens extends ModelePDFPropales
 {
 	/**
 	 * @var DoliDB Database handler
@@ -142,25 +142,14 @@ class pdf_huygens extends ModelePDFPropales
 
 
 	/**
-	 * 		Get the stock of the product
+	 * 		Get the label of the product
 	* 		@param 	Propal		$object		common object
 	 * 		@param	int			$i			the index of the object
 	 * 		@return String					Return the stock of the product in the command details
 	 */
-	public function pdf_getlinestock($object, $i)
+	public function pdf_getlinelabel($object, $i)
 	{
-		$fk_product = $object->lines[$i]->fk_product;
-		$sql = "SELECT p.stock as stock FROM ".MAIN_DB_PREFIX."product as p ";
-		$sql.="WHERE p.rowid = ".$fk_product;
-
-		$resql = $this->db->query($sql);
-		if($resql){
-			$obj = $this->db->fetch_object($resql);
-			
-			return ''.$obj->stock;
-		}
-
-		return '';
+		return dol_htmlentitiesbr($object->lines[$i]->libelle);
 	}
 
 	// phpcs:disable PEAR.NamingConventions.ValidFunctionName.ScopeNotCamelCaps
@@ -677,10 +666,17 @@ class pdf_huygens extends ModelePDFPropales
 
 					$pdf->SetFont('', '', $default_font_size - 1); // We reposition the default font
 
-					// VAT Rate
-					if ($this->getColumnStatus('vat')) {
-						$vat_rate = pdf_getlinevatrate($object, $i, $outputlangs, $hidedetails);
-						$this->printStdColumnContent($pdf, $curY, 'vat', $vat_rate);
+					// Label of the product
+					if ($this->getColumnStatus('ref')) {
+						$ref = pdf_getlineref($object, $i, $outputlangs, $hidedetails);
+						$this->printStdColumnContent($pdf, $curY, 'ref', $ref);
+						$nexY = max($pdf->GetY(), $nexY);
+					}
+
+					// Label of the product
+					if ($this->getColumnStatus('label')) {
+						$label = $this->pdf_getlinelabel($object, $i);
+						$this->printStdColumnContent($pdf, $curY, 'label', $label);
 						$nexY = max($pdf->GetY(), $nexY);
 					}
 
@@ -694,7 +690,7 @@ class pdf_huygens extends ModelePDFPropales
 					// Quantity
 					// Enough for 6 chars
 					if ($this->getColumnStatus('qty')) {
-						$qty = pdf_getlineqty($object, $i, $outputlangs, $hidedetails);
+						// $qty = pdf_getlineqty($object, $i, $outputlangs, $hidedetails);
 						$this->printStdColumnContent($pdf, $curY, 'qty', $qty);
 						$nexY = max($pdf->GetY(), $nexY);
 					}
@@ -1946,12 +1942,11 @@ class pdf_huygens extends ModelePDFPropales
 				'padding' => array(1, 0.5, 1, 1.5), // Like css 0 => top , 1 => right, 2 => bottom, 3 => left
 			),
 		);
-
 		$rank = 5; // do not use negative rank
 		$this->cols['desc'] = array(
 			'rank' => $rank,
-			'width' => false, // only for desc
-			'status' => true,
+			'width' => 26, // only for desc
+			'status' => false,
 			'title' => array(
 				'textkey' => 'Designation', // use lang key is useful in somme case with module
 				'align' => 'L',
@@ -1962,6 +1957,20 @@ class pdf_huygens extends ModelePDFPropales
 			'content' => array(
 				'align' => 'L',
 				'padding' => array(1, 0.5, 1, 1.5), // Like css 0 => top , 1 => right, 2 => bottom, 3 => left
+			),
+		);
+
+		$rank = 5; // do not use negative rank
+		$this->cols['ref'] = array(
+			'rank' => $rank,
+			'width' => 35,
+			'status' => true,
+			'title' => array(
+				'textkey' => 'Ref', // use lang key is useful in somme case with module
+				'align' => 'L',
+			),
+			'content' => array(
+				'align' => 'L',
 			),
 		);
 
@@ -1988,12 +1997,12 @@ class pdf_huygens extends ModelePDFPropales
 
 
 		$rank = $rank + 10;
-		$this->cols['vat'] = array(
+		$this->cols['label'] = array(
 			'rank' => $rank,
-			'status' => false,
-			'width' => 16, // in mm
+			'status' => true,
+			'width' => 75, // in mm
 			'title' => array(
-				'textkey' => 'VAT'
+				'textkey' => 'label'
 			),
 			'border-left' => true, // add left line separator
 		);
@@ -2088,7 +2097,7 @@ class pdf_huygens extends ModelePDFPropales
 		$rank = $rank + 1020;
 		$this->cols['qty_comm'] = array(
 			'rank' => $rank,
-			'width' => 26, // in mm
+			'width' => 40, // in mm
 			'status' => true,
 			'title' => array(
 				'textkey' => 'Quantité à commander'
