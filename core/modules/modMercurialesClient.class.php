@@ -100,7 +100,7 @@ class modMercurialesClient extends DolibarrModules
 			// Set this to 1 if module has its own barcode directory (core/modules/barcode)
 			'barcode' => 0,
 			// Set this to 1 if module has its own models directory (core/modules/xxx)
-			'models' => 0,
+			'models' => 1,
 			// Set this to 1 if module has its own printing directory (core/modules/printing)
 			'printing' => 0,
 			// Set this to 1 if module has its own theme directory (theme)
@@ -488,12 +488,7 @@ class modMercurialesClient extends DolibarrModules
 					}
 				}
 
-				$sql = array_merge($sql, array(
-					"DELETE FROM ".MAIN_DB_PREFIX."document_model WHERE nom = 'standard_".strtolower($myTmpObjectKey)."' AND type = '".$this->db->escape(strtolower($myTmpObjectKey))."' AND entity = ".((int) $conf->entity),
-					"INSERT INTO ".MAIN_DB_PREFIX."document_model (nom, type, entity) VALUES('standard_".strtolower($myTmpObjectKey)."', '".$this->db->escape(strtolower($myTmpObjectKey))."', ".((int) $conf->entity).")",
-					"DELETE FROM ".MAIN_DB_PREFIX."document_model WHERE nom = 'generic_".strtolower($myTmpObjectKey)."_odt' AND type = '".$this->db->escape(strtolower($myTmpObjectKey))."' AND entity = ".((int) $conf->entity),
-					"INSERT INTO ".MAIN_DB_PREFIX."document_model (nom, type, entity) VALUES('generic_".strtolower($myTmpObjectKey)."_odt', '".$this->db->escape(strtolower($myTmpObjectKey))."', ".((int) $conf->entity).")"
-				));
+				$sql = array("INSERT INTO ".MAIN_DB_PREFIX."document_model (nom, type, entity) VALUES('huygens','propal','1')");
 			}
 		}
 
