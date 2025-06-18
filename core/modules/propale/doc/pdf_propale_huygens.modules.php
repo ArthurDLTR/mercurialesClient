@@ -350,20 +350,20 @@ class pdf_propale_huygens extends ModelePDFPropales
 				}
 				$pagenb++;
 
-				$heightforinfotot = 40; // Height reserved to output the info and total part
-				$heightforsignature = !getDolGlobalString('PROPAL_DISABLE_SIGNATURE') ? (pdfGetHeightForHtmlContent($pdf, $outputlangs->transnoentities("ProposalCustomerSignature")) + 10) : 0;
-				$heightforfreetext = (isset($conf->global->MAIN_PDF_FREETEXT_HEIGHT) ? $conf->global->MAIN_PDF_FREETEXT_HEIGHT : 5); // Height reserved to output the free text on last page
+				$heightforinfotot = 0; // Height reserved to output the info and total part
+				$heightforsignature = 0; // !getDolGlobalString('PROPAL_DISABLE_SIGNATURE') ? (pdfGetHeightForHtmlContent($pdf, $outputlangs->transnoentities("ProposalCustomerSignature")) + 10) : 0;
+				$heightforfreetext = 0; // (isset($conf->global->MAIN_PDF_FREETEXT_HEIGHT) ? $conf->global->MAIN_PDF_FREETEXT_HEIGHT : 5); // Height reserved to output the free text on last page
 				$heightforfooter = $this->marge_basse + (!getDolGlobalString('MAIN_GENERATE_DOCUMENTS_SHOW_FOOT_DETAILS') ? 12 : 22); // Height reserved to output the footer (value include bottom margin)
 				//print $heightforinfotot + $heightforsignature + $heightforfreetext + $heightforfooter;exit;
 
-				$top_shift = $this->_pagehead($pdf, $object, 1, $outputlangs, $outputlangsbis);
+				// $top_shift = $this->_pagehead($pdf, $object, 1, $outputlangs, $outputlangsbis);
 				$pdf->SetFont('', '', $default_font_size - 1);
 				$pdf->MultiCell(0, 3, ''); // Set interline to 3
 				$pdf->SetTextColor(0, 0, 0);
 
 
-				$tab_top = 90 + $top_shift;
-				$tab_top_newpage = (!getDolGlobalInt('MAIN_PDF_DONOTREPEAT_HEAD') ? 42 + $top_shift : 10);
+				$tab_top = 15 + $top_shift;
+				$tab_top_newpage = $tab_top; // (!getDolGlobalInt('MAIN_PDF_DONOTREPEAT_HEAD') ? 42 + $top_shift : 10);
 
 				$nexY = $tab_top;
 
@@ -456,7 +456,7 @@ class pdf_propale_huygens extends ModelePDFPropales
 								$pdf->useTemplate($tplidx);
 							}
 							if (!getDolGlobalInt('MAIN_PDF_DONOTREPEAT_HEAD')) {
-								$this->_pagehead($pdf, $object, 0, $outputlangs);
+								// $this->_pagehead($pdf, $object, 0, $outputlangs);
 							}
 							// $this->_pagefoot($pdf,$object,$outputlangs,1);
 							$pdf->setTopMargin($tab_top_newpage);
@@ -503,7 +503,7 @@ class pdf_propale_huygens extends ModelePDFPropales
 
 							// Add footer
 							$pdf->setPageOrientation('', 1, 0); // The only function to edit the bottom margin of current page to set it.
-							$this->_pagefoot($pdf, $object, $outputlangs, 1);
+							// $this->_pagefoot($pdf, $object, $outputlangs, 1);
 
 							$i++;
 						}
@@ -514,7 +514,7 @@ class pdf_propale_huygens extends ModelePDFPropales
 							$pdf->useTemplate($tplidx);
 						}
 						if (!getDolGlobalInt('MAIN_PDF_DONOTREPEAT_HEAD')) {
-							$this->_pagehead($pdf, $object, 0, $outputlangs);
+							// $this->_pagehead($pdf, $object, 0, $outputlangs);
 						}
 						$height_note = $posyafter - $tab_top_newpage;
 						$pdf->Rect($this->marge_gauche, $tab_top_newpage - 1, $tab_width, $height_note + 1);
@@ -536,7 +536,7 @@ class pdf_propale_huygens extends ModelePDFPropales
 								$pdf->useTemplate($tplidx);
 							}
 							if (!getDolGlobalInt('MAIN_PDF_DONOTREPEAT_HEAD')) {
-								$this->_pagehead($pdf, $object, 0, $outputlangs);
+								// $this->_pagehead($pdf, $object, 0, $outputlangs);
 							}
 
 							$posyafter = $tab_top_newpage;
@@ -841,12 +841,12 @@ class pdf_propale_huygens extends ModelePDFPropales
 						} else {
 							$this->_tableau($pdf, $tab_top_newpage, $this->page_hauteur - $tab_top_newpage - $heightforfooter, 0, $outputlangs, 1, 1, $object->multicurrency_code, $outputlangsbis);
 						}
-						$this->_pagefoot($pdf, $object, $outputlangs, 1);
+						// $this->_pagefoot($pdf, $object, $outputlangs, 1);
 						$pagenb++;
 						$pdf->setPage($pagenb);
 						$pdf->setPageOrientation('', 1, 0); // The only function to edit the bottom margin of current page to set it.
 						if (!getDolGlobalInt('MAIN_PDF_DONOTREPEAT_HEAD')) {
-							$this->_pagehead($pdf, $object, 0, $outputlangs);
+							// $this->_pagehead($pdf, $object, 0, $outputlangs);
 						}
 						if (!empty($tplidx)) {
 							$pdf->useTemplate($tplidx);
@@ -859,7 +859,7 @@ class pdf_propale_huygens extends ModelePDFPropales
 						} else {
 							$this->_tableau($pdf, $tab_top_newpage, $this->page_hauteur - $tab_top_newpage - $heightforfooter, 0, $outputlangs, 1, 1, $object->multicurrency_code, $outputlangsbis);
 						}
-						$this->_pagefoot($pdf, $object, $outputlangs, 1);
+						// $this->_pagefoot($pdf, $object, $outputlangs, 1);
 						// New page
 						$pdf->AddPage();
 						if (!empty($tplidx)) {
@@ -867,7 +867,7 @@ class pdf_propale_huygens extends ModelePDFPropales
 						}
 						$pagenb++;
 						if (!getDolGlobalInt('MAIN_PDF_DONOTREPEAT_HEAD')) {
-							$this->_pagehead($pdf, $object, 0, $outputlangs);
+							// $this->_pagehead($pdf, $object, 0, $outputlangs);
 						}
 					}
 				}
@@ -882,18 +882,18 @@ class pdf_propale_huygens extends ModelePDFPropales
 				}
 
 				// Display infos area
-				$posy = $this->drawInfoTable($pdf, $object, $bottomlasttab, $outputlangs);
+				// $posy = $this->drawInfoTable($pdf, $object, $bottomlasttab, $outputlangs);
 
 				// Display total zone
-				$posy = $this->drawTotalTable($pdf, $object, 0, $bottomlasttab, $outputlangs);
+				// $posy = $this->drawTotalTable($pdf, $object, 0, $bottomlasttab, $outputlangs);
 
 				// Customer signature area
 				if (!getDolGlobalString('PROPAL_DISABLE_SIGNATURE')) {
-					$posy = $this->drawSignatureArea($pdf, $object, $posy, $outputlangs);
+					// $posy = $this->drawSignatureArea($pdf, $object, $posy, $outputlangs);
 				}
 
 				// Pagefoot
-				$this->_pagefoot($pdf, $object, $outputlangs);
+				// $this->_pagefoot($pdf, $object, $outputlangs);
 				if (method_exists($pdf, 'AliasNbPages')) {
 					$pdf->AliasNbPages();
 				}
@@ -2000,9 +2000,12 @@ class pdf_propale_huygens extends ModelePDFPropales
 		$this->cols['label'] = array(
 			'rank' => $rank,
 			'status' => true,
-			'width' => 75, // in mm
+			'width' => 80, // in mm
 			'title' => array(
 				'textkey' => 'label'
+			),
+			'content' => array(
+				'align' => 'L',
 			),
 			'border-left' => true, // add left line separator
 		);
