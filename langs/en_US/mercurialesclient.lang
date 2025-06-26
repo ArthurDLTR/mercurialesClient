@@ -60,3 +60,5 @@ MercurialeClient = Customer price list
 START_DATE = Max date to consider
 MERCU_CLIENT_READ_PERM = Access to generation of customer market price list
 UPDATE = Update
+MERCURIALESCLIENT_TYPEOFDOC = Use orders instead of proposals to create the market price list
+MERCURIALESCLIENT_OPENPROPOSAL = When a market price list is created, the new proposal is directly opened

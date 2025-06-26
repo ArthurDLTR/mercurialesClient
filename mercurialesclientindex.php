@@ -69,6 +69,7 @@ require_once DOL_DOCUMENT_ROOT.'/categories/class/categorie.class.php';
 require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 require_once DOL_DOCUMENT_ROOT.'/comm/propal/class/propal.class.php';
 require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
+require_once DOL_DOCUMENT_ROOT.'/commande/class/commande.class.php';
 if (isModEnabled('adherent')) {
 	require_once DOL_DOCUMENT_ROOT.'/adherents/class/adherent.class.php';
 }
@@ -159,6 +160,7 @@ $formfile = new FormFile($db);
 $object = new Societe($db);
 $product = new Product($db);
 $propal = new Propal($db);
+$commande = new Commande($db);
 
 // Variables to define the limits of the request and the number of rows printed
 $limit = GETPOSTINT('limit') ? GETPOSTINT('limit') : $conf->liste_limit;
@@ -180,30 +182,52 @@ if ($offset > $totalnumofrows) {	// if total resultset is smaller than the pagin
 $object->fetch($socid);
 // print date('Y-m-j', dol_now());
 
-llxHeader("", $object->name.' - '.$langs->trans("Mercuriale"), '', '', 0, 0, '', '', '', 'mod-mercurialesclient page-index');
 
 if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
-	// SQL request
-	$sql = 'SELECT pd.fk_propal as propal_id, pd.fk_product as prod_id, pd.qty as qty, pd.subprice as price, pd.remise_percent as remise';
-	$sql.= ' FROM '.MAIN_DB_PREFIX.'propal as p';
-	$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'propaldet as pd on pd.fk_propal = p.rowid';
-	$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'product as prod on prod.rowid = pd.fk_product';
-	$sql.= ' WHERE p.fk_soc = '.$socid;
-	// Remove the product if not to buy and to sell
-	$sql.= ' AND prod.tosell = 1 AND prod.tobuy = 1';
-	// If start_date exists, we only get the products in proposals after this date
-	if ($start_date){
-		$sql.= " AND p.date_valid >= '".$start_date."'";
+	if(getDolGlobalInt('MERCURIALESCLIENT_TYPEOFDOC')){
+		// SQL request if we use orders
+		$sql = 'SELECT cd.fk_commande as commande_id, cd.fk_product as prod_id, cd.qty as qty, cd.subprice as price, cd.remise_percent as remise';
+		$sql.= ' FROM '.MAIN_DB_PREFIX.'commande as c';
+		$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'commandedet as cd on cd.fk_commande = c.rowid';
+		$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'product as prod on prod.rowid = cd.fk_product';
+		$sql.= ' WHERE c.fk_soc = '.$socid;
+		// Remove the product if not to buy and to sell
+		$sql.= ' AND prod.tosell = 1 AND prod.tobuy = 1';
+		// If start_date exists, we only get the products in proposals after this date
+		if ($start_date){
+			$sql.= " AND c.date_valid >= '".$start_date."'";
+		}
+		// Only get the product on the last proposal it appears
+		$sql.= ' AND c.date_valid = (SELECT MAX(cr.date_valid) FROM '.MAIN_DB_PREFIX.'commande as cr LEFT JOIN '.MAIN_DB_PREFIX.'commandedet as crd on crd.fk_commande = cr.rowid WHERE cr.fk_soc = '.$socid.' AND cd.fk_product = crd.fk_product';
+		// Only get the order ith the correct Customer Ref
+		if ($customer_ref){
+			$sql.= " AND cr.ref_client LIKE '%".$customer_ref."%'";
+		}
+		$sql.= ')';
+	} else {
+		// SQL request if we use orders
+		$sql = 'SELECT pd.fk_propal as propal_id, pd.fk_product as prod_id, pd.qty as qty, pd.subprice as price, pd.remise_percent as remise';
+		$sql.= ' FROM '.MAIN_DB_PREFIX.'propal as p';
+		$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'propaldet as pd on pd.fk_propal = p.rowid';
+		$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'product as prod on prod.rowid = pd.fk_product';
+		$sql.= ' WHERE p.fk_soc = '.$socid;
+		// Remove the product if not to buy and to sell
+		$sql.= ' AND prod.tosell = 1 AND prod.tobuy = 1';
+		// If start_date exists, we only get the products in proposals after this date
+		if ($start_date){
+			$sql.= " AND p.date_valid >= '".$start_date."'";
+		}
+		// Only get the product on the last proposal it appears
+		$sql.= ' AND p.date_valid = (SELECT MAX(pr.date_valid) FROM '.MAIN_DB_PREFIX.'propal as pr LEFT JOIN '.MAIN_DB_PREFIX.'propaldet as prd on prd.fk_propal = pr.rowid WHERE pr.fk_soc = '.$socid.' AND pd.fk_product = prd.fk_product';
+		// Only get the order ith the correct Customer Ref
+		if ($customer_ref){
+			$sql.= " AND pr.ref_client LIKE '%".$customer_ref."%'";
+		}
+		$sql.= ')';
 	}
-	// If a customer ref is entered, we only get the proposals with this customer ref
-	if ($customer_ref){
-		$sql.= " AND p.ref_client LIKE '%".$customer_ref."%'";
-	}
-	// Only get the product on the last proposal it appears
-	$sql.= ' AND p.date_valid = (SELECT MAX(pr.date_valid) FROM '.MAIN_DB_PREFIX.'propal as pr LEFT JOIN '.MAIN_DB_PREFIX.'propaldet as prd on prd.fk_propal = pr.rowid WHERE pr.fk_soc = '.$socid.' AND pd.fk_product = prd.fk_product)';
-
-	$resql = $db->query($sql);
-
+	// print $sql;
+	
+	$resql = $db->query($sql);	
 	
 	// Check if the button was clicked
 	if ($action == 'create_mercu' && GETPOSTISSET('createBtn', 'bool')){
@@ -215,7 +239,7 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 		$soc = new Societe($db);
 		$soc->fetch($socid);
 		$prop->thirdparty = $soc;
-
+		
 		
 		$num = $db->num_rows($resql);
 		// Loop on each product to had them to the proposal
@@ -234,14 +258,19 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 		
 		// print 'ID propale : '.$prop->id.' et sa ref '.$prop->ref;
 		if ($resCreation >= 0){
-			$text = $langs->trans("MERCU_SUCCESS_CREATE").' <a href="'.DOL_URL_ROOT.'/comm/propal/card.php?id='.$prop->id.'">'.$prop->ref.'</a>';
-			setEventMessages($text, null, 'mesgs');
+			if (getDolGlobalInt('MERCURIALESCLIENT_OPENPROPOSAL')){
+				header("Location: ".DOL_URL_ROOT.'/comm/propal/card.php?id='.$prop->id);
+			} else {
+				$text = $langs->trans("MERCU_SUCCESS_CREATE").' <a href="'.DOL_URL_ROOT.'/comm/propal/card.php?id='.$prop->id.'">'.$prop->ref.'</a>';
+				setEventMessages($text, null, 'mesgs');
+			}
 		} else {
 			setEventMessages("FAILED ", null, 'errors');
 		}
 	}
 	
 	// Content of the page
+	llxHeader("", $object->name.' - '.$langs->trans("Mercuriale"), '', '', 0, 0, '', '', '', 'mod-mercurialesclient page-index');
 	
 	// Thirdparty banner
 	$title = $langs->trans("ThirdParty");	
@@ -251,7 +280,7 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 	
 	print dol_get_fiche_head($head, 'mercuclient', $langs->trans("ThirdParty"), -1, 'company');
 	
-	dol_banner_tab($object, 'socid', $linkback, ($user->socid ? 0 : 1), 'rowid', 'nom');
+	dol_banner_tab($object, 'socid', '', ($user->socid ? 0 : 1), 'rowid', 'nom');
 	
 	// List of the products in all the proposals of the customer
 	print '<div class="fichecenter">';
@@ -294,7 +323,11 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 	print '<table class="noborder centpercent">';
 	print '<tr class="liste_titre">';
 	print '<th>'.$langs->trans('Product').($imax?'<span class="badge marginleftonlyshort">'.$imax.'</span>':'').'</th>';
-	print '<th>'.$langs->trans('Propal').($imax?'<span class="badge marginleftonlyshort">'.$imax.'</span>':'').'</th>';
+	if(getDolGlobalInt('MERCURIALESCLIENT_TYPEOFDOC')){
+		print '<th>'.$langs->trans('Order').($imax?'<span class="badge marginleftonlyshort">'.$imax.'</span>':'').'</th>';
+	} else {
+		print '<th>'.$langs->trans('Proposal').($imax?'<span class="badge marginleftonlyshort">'.$imax.'</span>':'').'</th>';
+	}
 	print '<th>'.$langs->trans('Price').($imax?'<span class="badge marginleftonlyshort">'.$imax.'</span>':'').'</th>';
 	print '<th>'.$langs->trans("Quantity").($imax?'<span class="badge marginleftonlyshort">'.$imax.'</span>':'').'</th>';
 	print '</tr>';
@@ -303,12 +336,20 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 	while ($i < $imax){
 		$obj = $db->fetch_object($resql);
 		$product->fetch($obj->prod_id);
-		$propal->fetch($obj->propal_id);
+		if(getDolGlobalInt('MERCURIALESCLIENT_TYPEOFDOC')){
+			$commande->fetch($obj->commande_id);
+		} else {
+			$propal->fetch($obj->propal_id);
+		}
 
 		print '<tr class="oddeven">';
 		print '<td class="nowrap">'.$product->getNomUrl(1).'</td>';
-		print '<td class="nowrap">'.$propal->getNomUrl(1).'</td>';
-		print '<td class="nowrap">'.$obj->price * (1 - $obj->remise).'</td>';
+		if(getDolGlobalInt('MERCURIALESCLIENT_TYPEOFDOC')){
+			print '<td class="nowrap">'.$commande->getNomUrl(1).'</td>';
+		} else {
+			print '<td class="nowrap">'.$propal->getNomUrl(1).'</td>';
+		}
+		print '<td class="nowrap">'.$obj->price * ((100 - $obj->remise) / 100) .'</td>';
 		print '<td class="nowrap">'.$obj->qty.'</td>';
 
 		$i++;

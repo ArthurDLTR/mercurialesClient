@@ -94,10 +94,10 @@ $formSetup = new FormSetup($db);
 
 // Enter here all parameters in your setup page
 
-// // Setup conf for selection of an URL
-// $item = $formSetup->newItem('MERCURIALESCLIENT_MYPARAM1');
-// $item->fieldOverride = (empty($_SERVER['HTTPS']) ? 'http://' : 'https://') . $_SERVER['HTTP_HOST'];
-// $item->cssClass = 'minwidth500';
+// // Setup option to choose between proposals and orders to create the market price list
+$item = $formSetup->newItem('MERCURIALESCLIENT_TYPEOFDOC')->setAsYesNo();
+// Setup option to choose to open directly the created proposal or just display a notification
+$item = $formSetup->newItem('MERCURIALESCLIENT_OPENPROPOSAL')->setAsYesNo();
 
 // // Setup conf for selection of a simple string input
 // $item = $formSetup->newItem('MERCURIALESCLIENT_MYPARAM2');
