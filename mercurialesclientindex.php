@@ -204,6 +204,7 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 			$sql.= " AND cr.ref_client LIKE '%".$customer_ref."%'";
 		}
 		$sql.= ')';
+		$sql.= ' GROUP BY cd.fk_product ORDER BY cd.fk_commande DESC';
 	} else {
 		// SQL request if we use orders
 		$sql = 'SELECT pd.fk_propal as propal_id, pd.fk_product as prod_id, pd.qty as qty, pd.subprice as price, pd.remise_percent as remise';
@@ -224,6 +225,7 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 			$sql.= " AND pr.ref_client LIKE '%".$customer_ref."%'";
 		}
 		$sql.= ')';
+		$sql.= ' GROUP BY pd.fk_product ORDER BY pd.fk_propal DESC';
 	}
 	// print $sql;
 	
