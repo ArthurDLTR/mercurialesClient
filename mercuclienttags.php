@@ -234,7 +234,7 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 		$sql.= ' GROUP BY cd.fk_product ORDER BY cd.fk_commande DESC';
 	} else {
 		// SQL request if we use orders
-		$sql = 'SELECT pd.fk_propal as propal_id, pd.fk_product as prod_id, pd.qty as qty, pd.subprice as price, pd.remise_percent as remise, c.fk_soc as societe';
+		$sql = 'SELECT pd.fk_propal as propal_id, pd.fk_product as prod_id, pd.qty as qty, pd.subprice as price, pd.remise_percent as remise, p.fk_soc as societe';
 		$sql.= ' FROM '.MAIN_DB_PREFIX.'propal as p';
 		$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'propaldet as pd on pd.fk_propal = p.rowid';
 		$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'product as prod on prod.rowid = pd.fk_product';
@@ -248,14 +248,14 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 		}
         // If a thirdparty categorie is selected, we limit the orders
         if ($soc_tag){
-            $sql.= " AND crs.fk_categorie = ".$soc_tag;
+            $sql.= " AND cs.fk_categorie = ".$soc_tag;
         }
         // If a product tag is selected, we limit the orders
         if($prod_tag){
-            $sql.= " AND crp.fk_categorie = ".$prod_tag;
+            $sql.= " AND cp.fk_categorie = ".$prod_tag;
         }
 		// Only get the product on the last proposal it appears
-		$sql.= ' AND p.date_valid = (SELECT MAX(cr.date_valid) FROM llx_propal as pr 
+		$sql.= ' AND p.date_valid = (SELECT MAX(pr.date_valid) FROM llx_propal as pr 
             LEFT JOIN '.MAIN_DB_PREFIX.'propaldet as prd on prd.fk_propal = pr.rowid 
             LEFT JOIN '.MAIN_DB_PREFIX.'categorie_societe as crs on crs.fk_soc = pr.fk_soc
             LEFT JOIN '.MAIN_DB_PREFIX.'categorie_product as crp on crp.fk_product = prd.fk_product';
@@ -275,7 +275,7 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 		$sql.= ')';
 		$sql.= ' GROUP BY pd.fk_product ORDER BY pd.fk_propal DESC';
 	}
-	print $sql;
+	// print $sql;
 	
 	$resql = $db->query($sql);	
 	
