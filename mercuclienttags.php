@@ -253,22 +253,19 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 		$sql.= ' AND p.date_valid = (SELECT MAX(pr.date_valid) FROM llx_propal as pr 
             LEFT JOIN '.MAIN_DB_PREFIX.'propaldet as prd on prd.fk_propal = pr.rowid 
             LEFT JOIN '.MAIN_DB_PREFIX.'categorie_societe as crs on crs.fk_soc = pr.fk_soc
-            LEFT JOIN '.MAIN_DB_PREFIX.'categorie_product as crp on crp.fk_product = prd.fk_product WHERE pd.fk_product = crd.fk_product';
+            LEFT JOIN '.MAIN_DB_PREFIX.'categorie_product as crp on crp.fk_product = prd.fk_product WHERE pd.fk_product = prd.fk_product';
 		// If a thirdparty categorie is selected, we limit the orders
         if ($soc_tag){
-            $sql.= " crs.fk_categorie = ".$soc_tag;
+            $sql.= " AND crs.fk_categorie = ".$soc_tag;
         }
         // If a product tag is selected, we limit the orders
         if($prod_tag){
-            if ($soc_tag){
-                $sql.= " AND";
-            }
-            $sql.= " crp.fk_categorie = ".$prod_tag;
+            $sql.= " AND crp.fk_categorie = ".$prod_tag;
         }
 		$sql.= ')';
 		$sql.= ' GROUP BY pd.fk_product ORDER BY pd.fk_propal DESC';
 	}
-	// print $sql;
+	print $sql;
 	
 	$resql = $db->query($sql);	
 	
