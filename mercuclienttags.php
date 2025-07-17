@@ -216,18 +216,13 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 		$sql.= ' AND c.date_valid = (SELECT MAX(cr.date_valid) FROM llx_commande as cr 
             LEFT JOIN '.MAIN_DB_PREFIX.'commandedet as crd on crd.fk_commande = cr.rowid 
             LEFT JOIN '.MAIN_DB_PREFIX.'categorie_societe as crs on crs.fk_soc = cr.fk_soc
-            LEFT JOIN '.MAIN_DB_PREFIX.'categorie_product as crp on crp.fk_product = crd.fk_product';
+            LEFT JOIN '.MAIN_DB_PREFIX.'categorie_product as crp on crp.fk_product = crd.fk_product WHERE cd.fk_product = crd.fk_product';
 		// If a thirdparty categorie is selected, we limit the orders
         if ($soc_tag){
-            $sql.= " WHERE crs.fk_categorie = ".$soc_tag;
+            $sql.= " AND crs.fk_categorie = ".$soc_tag;
         }
         // If a product tag is selected, we limit the orders
         if($prod_tag){
-            if ($soc_tag){
-                $sql.= " AND";
-            } else {
-                $sql.= " WHERE";
-            }
             $sql.= " AND crp.fk_categorie = ".$prod_tag;
         }
 		$sql.= ')';
@@ -258,17 +253,15 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 		$sql.= ' AND p.date_valid = (SELECT MAX(pr.date_valid) FROM llx_propal as pr 
             LEFT JOIN '.MAIN_DB_PREFIX.'propaldet as prd on prd.fk_propal = pr.rowid 
             LEFT JOIN '.MAIN_DB_PREFIX.'categorie_societe as crs on crs.fk_soc = pr.fk_soc
-            LEFT JOIN '.MAIN_DB_PREFIX.'categorie_product as crp on crp.fk_product = prd.fk_product';
+            LEFT JOIN '.MAIN_DB_PREFIX.'categorie_product as crp on crp.fk_product = prd.fk_product WHERE pd.fk_product = crd.fk_product';
 		// If a thirdparty categorie is selected, we limit the orders
         if ($soc_tag){
-            $sql.= "  WHERE crs.fk_categorie = ".$soc_tag;
+            $sql.= " crs.fk_categorie = ".$soc_tag;
         }
         // If a product tag is selected, we limit the orders
         if($prod_tag){
             if ($soc_tag){
                 $sql.= " AND";
-            } else {
-                $sql.= " WHERE";
             }
             $sql.= " crp.fk_categorie = ".$prod_tag;
         }
