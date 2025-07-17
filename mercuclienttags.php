@@ -147,12 +147,22 @@ if (GETPOST('start_date', 'alpha')){
 
 if(GETPOST('thirdparty_tag', 'alpha')){
 	$soc_tag = GETPOST('thirdparty_tag', 'alpha');
+	$soc_tags = '(';
+	foreach ($soc_tag as $tag){
+		$soc_tags.= $tag.',';
+	}
+	$soc_tag = substr($soc_tags, 0, -1).')';
 } else {
 	$soc_tag = '';
 }
 
 if(GETPOST('product_tag', 'alpha')){
 	$prod_tag = GETPOST('product_tag', 'alpha');
+	$prod_tags = '(';
+	foreach ($prod_tag as $tag){
+		$prod_tags.= $tag.',';
+	}
+	$prod_tag = substr($prod_tags, 0, -1).')';
 } else {
 	$prod_tag = '';
 }
@@ -207,11 +217,11 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 		}
         // If a thirdparty categorie is selected, we limit the orders
         if ($soc_tag){
-            $sql.= " AND cs.fk_categorie = ".$soc_tag;
+            $sql.= " AND cs.fk_categorie IN ".$soc_tag;
         }
         // If a product tag is selected, we limit the orders
         if($prod_tag){
-            $sql.= " AND cp.fk_categorie = ".$prod_tag;
+            $sql.= " AND cp.fk_categorie IN ".$prod_tag;
         }
 		$sql.= ' AND c.date_valid = (SELECT MAX(cr.date_valid) FROM llx_commande as cr 
             LEFT JOIN '.MAIN_DB_PREFIX.'commandedet as crd on crd.fk_commande = cr.rowid 
@@ -219,11 +229,11 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
             LEFT JOIN '.MAIN_DB_PREFIX.'categorie_product as crp on crp.fk_product = crd.fk_product WHERE cd.fk_product = crd.fk_product';
 		// If a thirdparty categorie is selected, we limit the orders
         if ($soc_tag){
-            $sql.= " AND crs.fk_categorie = ".$soc_tag;
+            $sql.= " AND crs.fk_categorie IN ".$soc_tag;
         }
         // If a product tag is selected, we limit the orders
         if($prod_tag){
-            $sql.= " AND crp.fk_categorie = ".$prod_tag;
+            $sql.= " AND crp.fk_categorie IN ".$prod_tag;
         }
 		$sql.= ')';
 		$sql.= ' GROUP BY cd.fk_product ORDER BY cd.fk_commande DESC';
@@ -243,11 +253,11 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 		}
         // If a thirdparty categorie is selected, we limit the orders
         if ($soc_tag){
-            $sql.= " AND cs.fk_categorie = ".$soc_tag;
+            $sql.= " AND cs.fk_categorie IN ".$soc_tag;
         }
         // If a product tag is selected, we limit the orders
         if($prod_tag){
-            $sql.= " AND cp.fk_categorie = ".$prod_tag;
+            $sql.= " AND cp.fk_categorie IN ".$prod_tag;
         }
 		// Only get the product on the last proposal it appears
 		$sql.= ' AND p.date_valid = (SELECT MAX(pr.date_valid) FROM llx_propal as pr 
@@ -256,16 +266,16 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
             LEFT JOIN '.MAIN_DB_PREFIX.'categorie_product as crp on crp.fk_product = prd.fk_product WHERE pd.fk_product = prd.fk_product';
 		// If a thirdparty categorie is selected, we limit the orders
         if ($soc_tag){
-            $sql.= " AND crs.fk_categorie = ".$soc_tag;
+            $sql.= " AND crs.fk_categorie IN ".$soc_tag;
         }
         // If a product tag is selected, we limit the orders
         if($prod_tag){
-            $sql.= " AND crp.fk_categorie = ".$prod_tag;
+            $sql.= " AND crp.fk_categorie IN ".$prod_tag;
         }
 		$sql.= ')';
 		$sql.= ' GROUP BY pd.fk_product ORDER BY pd.fk_propal DESC';
 	}
-	print $sql;
+	// print $sql;
 	
 	$resql = $db->query($sql);	
 	
@@ -354,32 +364,35 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 	print '<label for="product_tag">'.$langs->trans('ProductTag').'</label>';
     $cate = $form->select_all_categories(Categorie::TYPE_PRODUCT, '', 'parent', 64, 0, 1);
     // var_dump($cate);
-    print '<select id="product_tag" name="product_tag"><option value=""></option>';
-    // Adding each product tag to the select options
-    foreach($cate as $key => $value){
-        if ($prod_tag == $key){
-            print '<option selected value="'.$key.'">'.$value.'</option>';
-        } else {
-            print '<option value="'.$key.'">'.$value.'</option>';
-        }
-    }
+    // print '<select id="product_tag" name="product_tag"><option value=""></option>';
+    // // Adding each product tag to the select options
+    // foreach($cate as $key => $value){
+    //     if ($prod_tag == $key){
+    //         print '<option selected value="'.$key.'">'.$value.'</option>';
+    //     } else {
+    //         print '<option value="'.$key.'">'.$value.'</option>';
+    //     }
+    // }
 
-    print '</select><br>';
+    // print '</select><br>';
+	print $form->multiselectarray('product_tag', $cate, GETPOST('product_tag', 'alpha'));
+	print '<br>';
 
     // Thirdparty tag selection
     print '<label for="thirdparty_tag">'.$langs->trans('ThirdpartyTag').'</label>';
     $cate = $form->select_all_categories(Categorie::TYPE_CUSTOMER, '', 'parent', 64, 0, 1);
-    print '<select id="thirdparty_tag" name="thirdparty_tag">';
-    print '<option value=""></option>';
-    // Adding each thirdparty tag to the select options
-    foreach($cate as $key => $value){
-        if ($soc_tag == $key){
-            print '<option selected value="'.$key.'">'.$value.'</option>';
-        } else {
-            print '<option value="'.$key.'">'.$value.'</option>';
-        }
-    }
-    print '</select>';
+    // print '<select id="thirdparty_tag" name="thirdparty_tag">';
+    // print '<option value=""></option>';
+    // // Adding each thirdparty tag to the select options
+    // foreach($cate as $key => $value){
+    //     if ($soc_tag == $key){
+    //         print '<option selected value="'.$key.'">'.$value.'</option>';
+    //     } else {
+    //         print '<option value="'.$key.'">'.$value.'</option>';
+    //     }
+    // }
+    // print '</select>';
+	print $form->multiselectarray('thirdparty_tag', $cate, GETPOST('thirdparty_tag', 'alpha'));
 
 	print '<input type="submit" class="button buttonform small" value="'.$langs->trans("UPDATE").'">';
 	print '<br>';
