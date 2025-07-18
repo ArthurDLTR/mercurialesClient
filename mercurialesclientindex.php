@@ -269,6 +269,7 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 		} else {
 			setEventMessages("FAILED ", null, 'errors');
 		}
+		$resql = $db->query($sql);
 	}
 	
 	// Content of the page
@@ -287,7 +288,6 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 	// List of the products in all the proposals of the customer
 	print '<div class="fichecenter">';
 	
-	$resql = $db->query($sql);
 	
 	if($limit){
 		$sql.=$db->plimit($limit + 1, $offset);

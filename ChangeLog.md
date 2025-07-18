@@ -1,5 +1,8 @@
 # CHANGELOG MERCURIALESCLIENT FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 
+## 0.5
+Ajout d'un onglet pour créer une mercuriale à partir d'un type de client ou d'un type de produit.
+
 ## 0.4
 Ajout d'un champ de saisie pour pouvoir filtrer en fonction des références client des propales.
 
