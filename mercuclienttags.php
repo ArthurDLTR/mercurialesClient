@@ -167,6 +167,11 @@ if(GETPOST('product_tag', 'alpha')){
 	$prod_tag = '';
 }
 
+if (GETPOST('socidSelected', 'alpha')){
+	$socidSelected = GETPOST('socidSelected', 'alpha');
+} else {
+	$socidSelected = '';
+}
 
 /*
 * View
@@ -209,8 +214,13 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 		$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'product as prod on prod.rowid = cd.fk_product';
 		$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'categorie_societe as cs on cs.fk_soc = c.fk_soc';
         $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'categorie_product as cp on cp.fk_product = cd.fk_product';
-        // Remove the product if not to buy and to sell
+		
+		// Remove the product if not to buy and to sell
 		$sql.= ' WHERE prod.tosell = 1 AND prod.tobuy = 1';
+        // Select a specific thirdparty
+		if ($socidSelected){
+			$sql.= ' AND c.fk_soc = '.$socidSelected;
+		}
 		// If start_date exists, we only get the products in proposals after this date
 		if ($start_date){
 			$sql.= " AND c.date_valid >= '".$start_date."'";
@@ -227,7 +237,11 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
             LEFT JOIN '.MAIN_DB_PREFIX.'commandedet as crd on crd.fk_commande = cr.rowid 
             LEFT JOIN '.MAIN_DB_PREFIX.'categorie_societe as crs on crs.fk_soc = cr.fk_soc
             LEFT JOIN '.MAIN_DB_PREFIX.'categorie_product as crp on crp.fk_product = crd.fk_product WHERE cd.fk_product = crd.fk_product';
-		// If a thirdparty categorie is selected, we limit the orders
+		// Select a specific thirdparty
+		if ($socidSelected){
+			$sql.= ' AND cr.fk_soc = '.$socidSelected;
+		}
+			// If a thirdparty categorie is selected, we limit the orders
         if ($soc_tag){
             $sql.= " AND crs.fk_categorie IN ".$soc_tag;
         }
@@ -247,6 +261,10 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
         $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'categorie_product as cp on cp.fk_product = pd.fk_product';
         // Remove the product if not to buy and to sell
 		$sql.= ' WHERE prod.tosell = 1 AND prod.tobuy = 1';
+		// Select a specific thirdparty
+		if ($socidSelected){
+			$sql.= ' AND p.fk_soc = '.$socidSelected;
+		}
 		// If start_date exists, we only get the products in proposals after this date
 		if ($start_date){
 			$sql.= " AND p.date_valid >= '".$start_date."'";
@@ -264,7 +282,11 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
             LEFT JOIN '.MAIN_DB_PREFIX.'propaldet as prd on prd.fk_propal = pr.rowid 
             LEFT JOIN '.MAIN_DB_PREFIX.'categorie_societe as crs on crs.fk_soc = pr.fk_soc
             LEFT JOIN '.MAIN_DB_PREFIX.'categorie_product as crp on crp.fk_product = prd.fk_product WHERE pd.fk_product = prd.fk_product';
-		// If a thirdparty categorie is selected, we limit the orders
+		// Select a specific thirdparty
+		if ($socidSelected){
+			$sql.= ' AND pr.fk_soc = '.$socidSelected;
+		}
+			// If a thirdparty categorie is selected, we limit the orders
         if ($soc_tag){
             $sql.= " AND crs.fk_categorie IN ".$soc_tag;
         }
@@ -393,7 +415,11 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
     // }
     // print '</select>';
 	print $form->multiselectarray('thirdparty_tag', $cate, GETPOST('thirdparty_tag', 'alpha'));
-
+	print '<br>';
+	
+	// Box to choose a thirdparty to copy the price list
+	print img_picto('', 'company', 'class="pictofixedwidth"').$form->select_company($socidSelected, 'socidSelected', '((s.client:IN:1,2,3) AND (s.status:=:1))', 'SelectThirdParty', 1, 0, null, 0, 'minwidth175 maxwidth300 widthcentpercentminusxx');
+	
 	print '<input type="submit" class="button buttonform small" value="'.$langs->trans("UPDATE").'">';
 	print '<br>';
 
