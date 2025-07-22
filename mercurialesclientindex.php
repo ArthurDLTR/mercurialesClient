@@ -150,12 +150,6 @@ if(GETPOST('customer_ref', 'alpha')){
 	$customer_ref = '';
 }
 
-if (GETPOST('socidSelected', 'alpha')){
-	$socidSelected = GETPOST('socidSelected', 'alpha');
-} else {
-	$socidSelected = '';
-}
-
 
 /*
 * View
@@ -188,19 +182,13 @@ if ($offset > $totalnumofrows) {	// if total resultset is smaller than the pagin
 $object->fetch($socid);
 
 if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
-	$socidSql = '';
-	if ($socidSelected && $socidSelected != -1){
-		$socidSql = $socidSelected;
-	} else {
-		$socidSql = $socid;
-	}
 	if(getDolGlobalInt('MERCURIALESCLIENT_TYPEOFDOC')){
 		// SQL request if we use orders
 		$sql = 'SELECT cd.fk_commande as commande_id, cd.fk_product as prod_id, cd.qty as qty, cd.subprice as price, cd.remise_percent as remise';
 		$sql.= ' FROM '.MAIN_DB_PREFIX.'commande as c';
 		$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'commandedet as cd on cd.fk_commande = c.rowid';
 		$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'product as prod on prod.rowid = cd.fk_product';
-		$sql.= ' WHERE c.fk_soc = '.$socidSql;
+		$sql.= ' WHERE c.fk_soc = '.$socid;
 
 		// Remove the product if not to buy and to sell
 		$sql.= ' AND prod.tosell = 1 AND prod.tobuy = 1';
@@ -209,7 +197,7 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 			$sql.= " AND c.date_valid >= '".$start_date."'";
 		}
 		// Only get the product on the last proposal it appears
-		$sql.= ' AND c.date_valid = (SELECT MAX(cr.date_valid) FROM '.MAIN_DB_PREFIX.'commande as cr LEFT JOIN '.MAIN_DB_PREFIX.'commandedet as crd on crd.fk_commande = cr.rowid WHERE cr.fk_soc = '.$socidSql.' AND cd.fk_product = crd.fk_product';
+		$sql.= ' AND c.date_valid = (SELECT MAX(cr.date_valid) FROM '.MAIN_DB_PREFIX.'commande as cr LEFT JOIN '.MAIN_DB_PREFIX.'commandedet as crd on crd.fk_commande = cr.rowid WHERE cr.fk_soc = '.$socid.' AND cd.fk_product = crd.fk_product';
 		// Only get the order ith the correct Customer Ref
 		if ($customer_ref){
 			$sql.= " AND cr.ref_client LIKE '%".$customer_ref."%'";
@@ -222,7 +210,7 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 		$sql.= ' FROM '.MAIN_DB_PREFIX.'propal as p';
 		$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'propaldet as pd on pd.fk_propal = p.rowid';
 		$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'product as prod on prod.rowid = pd.fk_product';
-		$sql.= ' WHERE p.fk_soc = '.$socidSql;
+		$sql.= ' WHERE p.fk_soc = '.$socid;
 		
 		// Remove the product if not to buy and to sell
 		$sql.= ' AND prod.tosell = 1 AND prod.tobuy = 1';
@@ -231,7 +219,7 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 			$sql.= " AND p.date_valid >= '".$start_date."'";
 		}
 		// Only get the product on the last proposal it appears
-		$sql.= ' AND p.date_valid = (SELECT MAX(pr.date_valid) FROM '.MAIN_DB_PREFIX.'propal as pr LEFT JOIN '.MAIN_DB_PREFIX.'propaldet as prd on prd.fk_propal = pr.rowid WHERE pr.fk_soc = '.$socidSql.' AND pd.fk_product = prd.fk_product';
+		$sql.= ' AND p.date_valid = (SELECT MAX(pr.date_valid) FROM '.MAIN_DB_PREFIX.'propal as pr LEFT JOIN '.MAIN_DB_PREFIX.'propaldet as prd on prd.fk_propal = pr.rowid WHERE pr.fk_soc = '.$socid.' AND pd.fk_product = prd.fk_product';
 		// Only get the order ith the correct Customer Ref
 		if ($customer_ref){
 			$sql.= " AND pr.ref_client LIKE '%".$customer_ref."%'";
@@ -327,13 +315,12 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 	// Text box for search on Customer ref
 	print '<label for="customer_ref">'.$langs->trans('RefCustomer').'</label>';
 	print '<input type"text" id="customer_ref" name="customer_ref" value="'.$customer_ref.'">';
-	print '<br>';
-	
-	// Box to choose a thirdparty to copy the price list
-	print img_picto('', 'company', 'class="pictofixedwidth"').$form->select_company($socidSelected, 'socidSelected', '((s.client:IN:1,2,3) AND (s.status:=:1))', 'SelectThirdParty', 1, 0, null, 0, 'minwidth175 maxwidth300 widthcentpercentminusxx');
+
+	// Update button
 	print '<input type="submit" class="button buttonform small" value="'.$langs->trans("UPDATE").'">';
 	print '<br>';
 
+	// Button to generate the proposal
 	print $button;
 
 	print '<br>';
