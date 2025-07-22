@@ -218,7 +218,7 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 		// Remove the product if not to buy and to sell
 		$sql.= ' WHERE prod.tosell = 1 AND prod.tobuy = 1';
         // Select a specific thirdparty
-		if ($socidSelected){
+		if ($socidSelected && $socidSelected != -1){
 			$sql.= ' AND c.fk_soc = '.$socidSelected;
 		}
 		// If start_date exists, we only get the products in proposals after this date
@@ -238,7 +238,7 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
             LEFT JOIN '.MAIN_DB_PREFIX.'categorie_societe as crs on crs.fk_soc = cr.fk_soc
             LEFT JOIN '.MAIN_DB_PREFIX.'categorie_product as crp on crp.fk_product = crd.fk_product WHERE cd.fk_product = crd.fk_product';
 		// Select a specific thirdparty
-		if ($socidSelected){
+		if ($socidSelected && $socidSelected != -1){
 			$sql.= ' AND cr.fk_soc = '.$socidSelected;
 		}
 			// If a thirdparty categorie is selected, we limit the orders
@@ -262,7 +262,7 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
         // Remove the product if not to buy and to sell
 		$sql.= ' WHERE prod.tosell = 1 AND prod.tobuy = 1';
 		// Select a specific thirdparty
-		if ($socidSelected){
+		if ($socidSelected && $socidSelected != -1){
 			$sql.= ' AND p.fk_soc = '.$socidSelected;
 		}
 		// If start_date exists, we only get the products in proposals after this date
@@ -283,7 +283,7 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
             LEFT JOIN '.MAIN_DB_PREFIX.'categorie_societe as crs on crs.fk_soc = pr.fk_soc
             LEFT JOIN '.MAIN_DB_PREFIX.'categorie_product as crp on crp.fk_product = prd.fk_product WHERE pd.fk_product = prd.fk_product';
 		// Select a specific thirdparty
-		if ($socidSelected){
+		if ($socidSelected && $socidSelected != -1){
 			$sql.= ' AND pr.fk_soc = '.$socidSelected;
 		}
 			// If a thirdparty categorie is selected, we limit the orders
