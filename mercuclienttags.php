@@ -138,13 +138,14 @@ if (isset($user->socid) && $user->socid > 0) {
 /*
 * Actions
 */
-
+// Get the max date for date of creation of the object
 if (GETPOST('start_date', 'alpha')){
 	$start_date = GETPOST('start_date', 'alpha');
 } else {
 	$start_date = '';
 }
 
+// Get the customer tags selected
 if(GETPOST('thirdparty_tag', 'alpha')){
 	$soc_tag = GETPOST('thirdparty_tag', 'alpha');
 	$soc_tags = '(';
@@ -156,6 +157,7 @@ if(GETPOST('thirdparty_tag', 'alpha')){
 	$soc_tag = '';
 }
 
+// Get the product tags selected
 if(GETPOST('product_tag', 'alpha')){
 	$prod_tag = GETPOST('product_tag', 'alpha');
 	$prod_tags = '(';
@@ -167,10 +169,18 @@ if(GETPOST('product_tag', 'alpha')){
 	$prod_tag = '';
 }
 
+// Get the id of the thirdparty selected
 if (GETPOST('socidSelected', 'alpha')){
 	$socidSelected = GETPOST('socidSelected', 'alpha');
 } else {
 	$socidSelected = '';
+}
+
+// Get the customer ref typed
+if(GETPOST('customer_ref', 'alpha')){
+	$customer_ref = GETPOST('customer_ref', 'alpha');
+} else {
+	$customer_ref = '';
 }
 
 /*
@@ -241,7 +251,11 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 		if ($socidSelected && $socidSelected != -1){
 			$sql.= ' AND cr.fk_soc = '.$socidSelected;
 		}
-			// If a thirdparty categorie is selected, we limit the orders
+		// Only get the order with the correct Customer Ref
+		if ($customer_ref){
+			$sql.= " AND cr.ref_client LIKE '%".$customer_ref."%'";
+		}
+		// If a thirdparty categorie is selected, we limit the orders
         if ($soc_tag){
             $sql.= " AND crs.fk_categorie IN ".$soc_tag;
         }
@@ -286,7 +300,11 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 		if ($socidSelected && $socidSelected != -1){
 			$sql.= ' AND pr.fk_soc = '.$socidSelected;
 		}
-			// If a thirdparty categorie is selected, we limit the orders
+		// Only get the proposal ith the correct Customer Ref
+		if ($customer_ref){
+			$sql.= " AND pr.ref_client LIKE '%".$customer_ref."%'";
+		}
+		// If a thirdparty categorie is selected, we limit the orders
         if ($soc_tag){
             $sql.= " AND crs.fk_categorie IN ".$soc_tag;
         }
@@ -418,8 +436,14 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 	print '<br>';
 	
 	// Box to choose a thirdparty to copy the price list
-	print img_picto('', 'company', 'class="pictofixedwidth"').$form->select_company($socidSelected, 'socidSelected', '((s.client:IN:1,2,3) AND (s.status:=:1))', 'SelectThirdParty', 1, 0, null, 0, 'minwidth175 maxwidth300 widthcentpercentminusxx');
+	print $langs->trans('ThirdParty').' '.img_picto('', 'company', 'class="pictofixedwidth"').$form->select_company($socidSelected, 'socidSelected', '((s.client:IN:1,2,3) AND (s.status:=:1))', 'SelectThirdParty', 1, 0, null, 0, 'minwidth175 maxwidth300 widthcentpercentminusxx');
+	print '<br>';
+
+	// Text box for search on Customer ref
+	print '<label for="customer_ref">'.$langs->trans('RefCustomer').'</label>';
+	print '<input type"text" id="customer_ref" name="customer_ref" value="'.$customer_ref.'">';
 	
+	// Update button 
 	print '<input type="submit" class="button buttonform small" value="'.$langs->trans("UPDATE").'">';
 	print '<br>';
 

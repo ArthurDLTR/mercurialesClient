@@ -196,7 +196,7 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 		if ($start_date){
 			$sql.= " AND c.date_valid >= '".$start_date."'";
 		}
-		// Only get the product on the last proposal it appears
+		// Only get the product on the last order it appears
 		$sql.= ' AND c.date_valid = (SELECT MAX(cr.date_valid) FROM '.MAIN_DB_PREFIX.'commande as cr LEFT JOIN '.MAIN_DB_PREFIX.'commandedet as crd on crd.fk_commande = cr.rowid WHERE cr.fk_soc = '.$socid.' AND cd.fk_product = crd.fk_product';
 		// Only get the order ith the correct Customer Ref
 		if ($customer_ref){
@@ -220,7 +220,7 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 		}
 		// Only get the product on the last proposal it appears
 		$sql.= ' AND p.date_valid = (SELECT MAX(pr.date_valid) FROM '.MAIN_DB_PREFIX.'propal as pr LEFT JOIN '.MAIN_DB_PREFIX.'propaldet as prd on prd.fk_propal = pr.rowid WHERE pr.fk_soc = '.$socid.' AND pd.fk_product = prd.fk_product';
-		// Only get the order ith the correct Customer Ref
+		// Only get the proposal ith the correct Customer Ref
 		if ($customer_ref){
 			$sql.= " AND pr.ref_client LIKE '%".$customer_ref."%'";
 		}
