@@ -95,7 +95,7 @@ $formSetup = new FormSetup($db);
 // Enter here all parameters in your setup page
 
 // // Setup option to choose between proposals and orders to create the market price list
-$item = $formSetup->newItem('MERCURIALESCLIENT_TYPEOFDOC')->setAsYesNo();
+// $item = $formSetup->newItem('MERCURIALESCLIENT_TYPEOFDOC')->setAsYesNo();
 // Setup option to choose to open directly the created proposal or just display a notification
 $item = $formSetup->newItem('MERCURIALESCLIENT_OPENPROPOSAL')->setAsYesNo();
 

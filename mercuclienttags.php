@@ -183,6 +183,11 @@ if(GETPOST('customer_ref', 'alpha')){
 	$customer_ref = '';
 }
 
+// Get the type of document
+if (GETPOST('doc_type', 'alpha')){
+	$doctype = GETPOST('doc_type', 'alpha');
+}
+
 /*
 * View
 */
@@ -216,7 +221,7 @@ $object->fetch($socid);
 
 
 if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
-	if(getDolGlobalInt('MERCURIALESCLIENT_TYPEOFDOC')){
+	if($doctype == 'commande'){
 		// SQL request if we use orders
 		$sql = 'SELECT cd.fk_commande as commande_id, cd.fk_product as prod_id, cd.qty as qty, cd.subprice as price, cd.remise_percent as remise, c.fk_soc as societe';
 		$sql.= ' FROM '.MAIN_DB_PREFIX.'commande as c';
@@ -265,7 +270,7 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
         }
 		$sql.= ')';
 		$sql.= ' GROUP BY cd.fk_product ORDER BY cd.fk_commande DESC';
-	} else {
+	} else if ($doctype=="propal") {
 		// SQL request if we use orders
 		$sql = 'SELECT pd.fk_propal as propal_id, pd.fk_product as prod_id, pd.qty as qty, pd.subprice as price, pd.remise_percent as remise, p.fk_soc as societe';
 		$sql.= ' FROM '.MAIN_DB_PREFIX.'propal as p';
@@ -314,9 +319,10 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
         }
 		$sql.= ')';
 		$sql.= ' GROUP BY pd.fk_product ORDER BY pd.fk_propal DESC';
+	} else if ($doctype == "facture"){
+
 	}
 	// print $sql;
-	
 	$resql = $db->query($sql);	
 	
 	// Check if the button was clicked
@@ -396,6 +402,18 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 	// Form for the date
 	print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'?socid='.$socid.'&action=create_mercu">';
 	print '<input type="hidden" name="token" value="'.newToken().'">';
+
+	// Type of document ot use
+	print '<label for="doc_type">'.$langs->trans('DocumentType').'</label>';
+	print '<select id="doc_type" name="doc_type">';
+	print '<option value="propal" '.($doctype == 'propal' ? 'selected' : '').' >'.$langs->trans('Proposal').'</option>';
+	print '<option value="commande" '.($doctype == 'commande' ? 'selected' : '').' >'.$langs->trans('Order').'</option>';
+	print '<option value="facture" '.($doctype == 'facture' ? 'selected' : '').' >'.$langs->trans('Invoice').'</option>';
+	
+	print '</select>';
+	print '<br>';
+	
+	// Date choice
 	print '<label for="starting_date">' . $langs->trans('START_DATE') . '</label>';
 	print '<input type="date" id="start_date" name="start_date" value="'.$start_date.'">';
 	print '<br>';
@@ -454,10 +472,12 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 	print '<table class="noborder centpercent">';
 	print '<tr class="liste_titre">';
 	print '<th>'.$langs->trans('Product').($imax?'<span class="badge marginleftonlyshort">'.$imax.'</span>':'').'</th>';
-	if(getDolGlobalInt('MERCURIALESCLIENT_TYPEOFDOC')){
+	if($doctype == 'commande'){
 		print '<th>'.$langs->trans('Order').($imax?'<span class="badge marginleftonlyshort">'.$imax.'</span>':'').'</th>';
-	} else {
+	} else if ($doctype == 'propal'){
 		print '<th>'.$langs->trans('Proposal').($imax?'<span class="badge marginleftonlyshort">'.$imax.'</span>':'').'</th>';
+	} else if ($doctype == 'facture'){
+		print '<th>'.$langs->trans('Invoice').($imax?'<span class="badge marginleftonlyshort">'.$imax.'</span>':'').'</th>';
 	}
     print '<th>'.$langs->trans('ThirdParty').($imax?'<span class="badge marginleftonlyshort">'.$imax.'</span>':'').'</th>';
 	print '<th>'.$langs->trans('Price').($imax?'<span class="badge marginleftonlyshort">'.$imax.'</span>':'').'</th>';
@@ -470,19 +490,23 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 	while ($i < $imax){
 		$obj = $db->fetch_object($resql);
 		$product->fetch($obj->prod_id);
-		if(getDolGlobalInt('MERCURIALESCLIENT_TYPEOFDOC')){
+		if($doctype == 'commande'){
 			$commande->fetch($obj->commande_id);
-		} else {
+		} else if ($doctype == 'propal'){
 			$propal->fetch($obj->propal_id);
+		} else if ($doctype == 'facture'){
+			$fac->fetch($obj->fac_id);
 		}
         $soc->fetch($obj->societe);
 
 		print '<tr class="oddeven">';
 		print '<td class="nowrap">'.$product->getNomUrl(1).'</td>';
-		if(getDolGlobalInt('MERCURIALESCLIENT_TYPEOFDOC')){
+		if($doctype == 'commande'){
 			print '<td class="nowrap">'.$commande->getNomUrl(1).'</td>';
-		} else {
+		} else if ($doctype == 'propal'){
 			print '<td class="nowrap">'.$propal->getNomUrl(1).'</td>';
+		} else if ($doctype == 'facture'){
+			print '<td class="nowrap">'.$fac->getNomUrl(1).'</td>';
 		}
         print '<td class="nowrap">'.$soc->getNomUrl(1).'</td>';
 		print '<td class="nowrap">'.$obj->price * ((100 - $obj->remise) / 100) .'</td>';
