@@ -1,5 +1,8 @@
 # CHANGELOG MERCURIALESCLIENT FOR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 
+## 0.6
+Modification pour pouvoir choisir le type de document à prendre en compte.
+
 ## 0.5
 Ajout d'un onglet pour créer une mercuriale à partir d'un type de client ou d'un type de produit.
 

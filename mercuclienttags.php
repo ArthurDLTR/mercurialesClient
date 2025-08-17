@@ -70,6 +70,7 @@ require_once DOL_DOCUMENT_ROOT.'/product/class/product.class.php';
 require_once DOL_DOCUMENT_ROOT.'/comm/propal/class/propal.class.php';
 require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
 require_once DOL_DOCUMENT_ROOT.'/commande/class/commande.class.php';
+require_once DOL_DOCUMENT_ROOT.'/compta/facture/class/facture.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/class/html.formsetup.class.php';
 if (isModEnabled('adherent')) {
 	require_once DOL_DOCUMENT_ROOT.'/adherents/class/adherent.class.php';
@@ -186,6 +187,8 @@ if(GETPOST('customer_ref', 'alpha')){
 // Get the type of document
 if (GETPOST('doc_type', 'alpha')){
 	$doctype = GETPOST('doc_type', 'alpha');
+} else {
+	$doctype = 'propal';
 }
 
 /*
@@ -198,6 +201,7 @@ $object = new Societe($db);
 $product = new Product($db);
 $propal = new Propal($db);
 $commande = new Commande($db);
+$fac = new Facture($db);
 
 // Variables to define the limits of the request and the number of rows printed
 $limit = GETPOSTINT('limit') ? GETPOSTINT('limit') : $conf->liste_limit;
@@ -248,7 +252,7 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
         if($prod_tag){
             $sql.= " AND cp.fk_categorie IN ".$prod_tag;
         }
-		$sql.= ' AND c.date_valid = (SELECT MAX(cr.date_valid) FROM llx_commande as cr 
+		$sql.= ' AND c.date_valid = (SELECT MAX(cr.date_valid) FROM '.MAIN_DB_PREFIX.'commande as cr 
             LEFT JOIN '.MAIN_DB_PREFIX.'commandedet as crd on crd.fk_commande = cr.rowid 
             LEFT JOIN '.MAIN_DB_PREFIX.'categorie_societe as crs on crs.fk_soc = cr.fk_soc
             LEFT JOIN '.MAIN_DB_PREFIX.'categorie_product as crp on crp.fk_product = crd.fk_product WHERE cd.fk_product = crd.fk_product';
@@ -297,7 +301,7 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
             $sql.= " AND cp.fk_categorie IN ".$prod_tag;
         }
 		// Only get the product on the last proposal it appears
-		$sql.= ' AND p.date_valid = (SELECT MAX(pr.date_valid) FROM llx_propal as pr 
+		$sql.= ' AND p.date_valid = (SELECT MAX(pr.date_valid) FROM '.MAIN_DB_PREFIX.'propal as pr 
             LEFT JOIN '.MAIN_DB_PREFIX.'propaldet as prd on prd.fk_propal = pr.rowid 
             LEFT JOIN '.MAIN_DB_PREFIX.'categorie_societe as crs on crs.fk_soc = pr.fk_soc
             LEFT JOIN '.MAIN_DB_PREFIX.'categorie_product as crp on crp.fk_product = prd.fk_product WHERE pd.fk_product = prd.fk_product';
@@ -320,7 +324,54 @@ if ($user->hasRight('mercurialesclient', 'mercu_object', 'read')){
 		$sql.= ')';
 		$sql.= ' GROUP BY pd.fk_product ORDER BY pd.fk_propal DESC';
 	} else if ($doctype == "facture"){
-
+		// SQL request if we use orders
+		$sql = 'SELECT fd.fk_facture as fac_id, fd.fk_product as prod_id, fd.qty as qty, fd.subprice as price, fd.remise_percent as remise, f.fk_soc as societe';
+		$sql.= ' FROM '.MAIN_DB_PREFIX.'facture as f';
+		$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'facturedet as fd on fd.fk_facture = f.rowid';
+		$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'product as prod on prod.rowid = fd.fk_product';
+		$sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'categorie_societe as cs on cs.fk_soc = f.fk_soc';
+        $sql.= ' LEFT JOIN '.MAIN_DB_PREFIX.'categorie_product as cp on cp.fk_product = fd.fk_product';
+        // Remove the product if not to buy and to sell
+		$sql.= ' WHERE prod.tosell = 1 AND prod.tobuy = 1';
+		// Select a specific thirdparty
+		if ($socidSelected && $socidSelected != -1){
+			$sql.= ' AND f.fk_soc = '.$socidSelected;
+		}
+		// If start_date exists, we only get the products in proposals after this date
+		if ($start_date){
+			$sql.= " AND f.date_valid >= '".$start_date."'";
+		}
+        // If a thirdparty categorie is selected, we limit the orders
+        if ($soc_tag){
+            $sql.= " AND cs.fk_categorie IN ".$soc_tag;
+        }
+        // If a product tag is selected, we limit the orders
+        if($prod_tag){
+            $sql.= " AND cp.fk_categorie IN ".$prod_tag;
+        }
+		// Only get the product on the last proposal it appears
+		$sql.= ' AND f.date_valid = (SELECT MAX(fr.date_valid) FROM '.MAIN_DB_PREFIX.'facture as fr 
+            LEFT JOIN '.MAIN_DB_PREFIX.'facturedet as frd on frd.fk_facture = fr.rowid 
+            LEFT JOIN '.MAIN_DB_PREFIX.'categorie_societe as crs on crs.fk_soc = fr.fk_soc
+            LEFT JOIN '.MAIN_DB_PREFIX.'categorie_product as crp on crp.fk_product = frd.fk_product WHERE fd.fk_product = frd.fk_product';
+		// Select a specific thirdparty
+		if ($socidSelected && $socidSelected != -1){
+			$sql.= ' AND fr.fk_soc = '.$socidSelected;
+		}
+		// Only get the proposal ith the correct Customer Ref
+		if ($customer_ref){
+			$sql.= " AND fr.ref_client LIKE '%".$customer_ref."%'";
+		}
+		// If a thirdparty categorie is selected, we limit the orders
+        if ($soc_tag){
+            $sql.= " AND crs.fk_categorie IN ".$soc_tag;
+        }
+        // If a product tag is selected, we limit the orders
+        if($prod_tag){
+            $sql.= " AND crp.fk_categorie IN ".$prod_tag;
+        }
+		$sql.= ')';
+		$sql.= ' GROUP BY fd.fk_product ORDER BY fd.fk_facture DESC';
 	}
 	// print $sql;
 	$resql = $db->query($sql);	
